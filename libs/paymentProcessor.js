@@ -378,6 +378,9 @@ function SetupForPool(logger, poolOptions, setupFinished){
                         if (toSend >= minPaymentSatoshis) {
                             totalSent += toSend;
                             var address = worker.address = (worker.address || getProperAddress(w));
+                            console.log('worker.address: ' + worker.addresss);
+                            console.log('w in workers: ' + w);
+                            console.log('w after split: ' + getProperAddress(w));
                             worker.sent = addressAmounts[address] = satoshisToCoins(toSend);
                             worker.balanceChange = Math.min(worker.balance, toSend) * -1;
                         }
@@ -531,10 +534,16 @@ function SetupForPool(logger, poolOptions, setupFinished){
 
 
     var getProperAddress = function(address){
-        if (address.length === 40){
-            return util.addressFromEx(poolOptions.address, address);
+        if (address.length > 34){
+            var newAddress = address.split('.')[0].trim(); 
+            logger.debug(logSystem, logComponent, 'address with suffix ' + address + ', convert to address ' + newAddress);
+            return address.split('.')[0].trim();
         }
-        else return address;
+        if (address.length < 34) {
+            logger.warning(logSystem, logComponent, 'Invalid address ' + address + ', convert to address '+ poolOptions.address);
+            return poolOptions.address;
+        }
+        return address;
     };
 
 
