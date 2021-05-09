@@ -381,7 +381,12 @@ function SetupForPool(logger, poolOptions, setupFinished){
                             console.log('worker.address: ' + worker.addresss);
                             console.log('w in workers: ' + w);
                             console.log('w after split: ' + getProperAddress(w));
-                            worker.sent = addressAmounts[address] = satoshisToCoins(toSend);
+                            worker.sent = satoshisToCoins(toSend);
+                            if (addressAmounts[address] == null) {
+                                addressAmounts[address] = worker.sent 
+                            } else {
+                                addressAmounts[address] += worker.sent 
+                            }
                             worker.balanceChange = Math.min(worker.balance, toSend) * -1;
                         }
                         else {
