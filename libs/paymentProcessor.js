@@ -127,8 +127,19 @@ function SetupForPool(logger, poolOptions, setupFinished){
         setupFinished(true);
     });
 
+    function roundTo(n, digits) {
+        if (digits === undefined) {
+            digits = 0;
+        }
+        var multiplicator = Math.pow(10, digits);
+        n = parseFloat((n * multiplicator).toFixed(11));
+        var test =(Math.round(n) / multiplicator);
+        return +(test.toFixed(digits));
+    }
 
-
+    function coinsRound(number) {
+        return roundTo(number, coinPrecision);
+    }
 
     var satoshisToCoins = function(satoshis){
         return parseFloat((satoshis / magnitude).toFixed(coinPrecision));
@@ -381,11 +392,11 @@ function SetupForPool(logger, poolOptions, setupFinished){
                             console.log('worker.address: ' + worker.addresss);
                             console.log('w in workers: ' + w);
                             console.log('w after split: ' + getProperAddress(w));
-                            worker.sent = satoshisToCoins(toSend);
+                            worker.sent = coinsRound(satoshisToCoins(toSend));
                             if (addressAmounts[address] == null) {
-                                addressAmounts[address] = worker.sent 
+                                addressAmounts[address] = worker.sent;
                             } else {
-                                addressAmounts[address] += worker.sent 
+                                addressAmounts[address] = coinsRound(addressAmounts[address] + worker.sent);
                             }
                             worker.balanceChange = Math.min(worker.balance, toSend) * -1;
                         }
@@ -402,6 +413,7 @@ function SetupForPool(logger, poolOptions, setupFinished){
 
                     daemon.cmd('sendmany', [addressAccount || '', addressAmounts], function (result) {
                         //Check if payments failed because wallet doesn't have enough coins to pay for tx fees
+                        console.log("addressAmounts", JSON.stringify(addressAmounts)); 
                         if (result.error && result.error.code === -6) {
                             var higherPercent = withholdPercent + 0.01;
                             logger.warning(logSystem, logComponent, 'Not enough funds to cover the tx fees for sending out payments, decreasing rewards by '
