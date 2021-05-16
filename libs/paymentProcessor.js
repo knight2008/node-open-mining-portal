@@ -413,7 +413,7 @@ function SetupForPool(logger, poolOptions, setupFinished){
 
                     daemon.cmd('sendmany', [addressAccount || '', addressAmounts], function (result) {
                         //Check if payments failed because wallet doesn't have enough coins to pay for tx fees
-                        console.log("addressAmounts", JSON.stringify(addressAmounts)); 
+                        logger.warning(logSystem, logComponent, "addressAmounts: " + JSON.stringify(addressAmounts));
                         if (result.error && result.error.code === -6) {
                             var higherPercent = withholdPercent + 0.01;
                             logger.warning(logSystem, logComponent, 'Not enough funds to cover the tx fees for sending out payments, decreasing rewards by '
@@ -551,17 +551,21 @@ function SetupForPool(logger, poolOptions, setupFinished){
 
 
     var getProperAddress = function(address){
-        if (address.length > 34){
-            var newAddress = address.split('.')[0].trim(); 
-            logger.debug(logSystem, logComponent, 'address with suffix ' + address + ', convert to address ' + newAddress);
-            return address.split('.')[0].trim();
+        var defaultAddress = poolOptions.invalidAddress || poolOptions.address;
+        if(address == null || address.trim().length < 34) {
+            logger.warning(logSystem, logComponent,  address + ' convert to ' + defaultAddress);
+            return defaultAddress;
         }
-        if (address.length < 34) {
-            logger.warning(logSystem, logComponent, 'Invalid address ' + address + ', convert to address '+ poolOptions.address);
-            return poolOptions.address;
-        }
-        return address;
-    };
 
+        var newAddress = address.trim().split('.')[0]; 
+        if ( (newAddress[0] == poolOptions.address[0] || newAddress[0] == poolOptions.invalidAddress[0])
+            && util.isAddressValid(newAddress) ) {
+            logger.debug(logSystem, logComponent,  address + ' convert to ' + newAddress);
+            return newAddress;
+        } else {
+            logger.warning(logSystem, logComponent,  address + ' convert to ' + defaultAddress);
+            return defaultAddress;
+        }
+    };
 
 }
